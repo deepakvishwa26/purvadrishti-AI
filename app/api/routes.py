@@ -19,7 +19,7 @@ templates = Jinja2Templates(directory="templates")
 # ── Dashboard ─────────────────────────────────────────────────────────
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def dashboard(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 # ── Health ────────────────────────────────────────────────────────────
