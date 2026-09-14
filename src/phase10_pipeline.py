@@ -32,7 +32,8 @@ sys.path.insert(0, ROOT)
 import xgboost as xgb
 
 # ── Paths ─────────────────────────────────────────────────────────────
-BASE_DATA_DIR = os.environ.get("PURVADRISHTI_DATA_DIR", "data/output")
+_rel_data = os.environ.get("PURVADRISHTI_DATA_DIR", "data/output")
+BASE_DATA_DIR = os.path.join(ROOT, _rel_data)
 P7   = f"{BASE_DATA_DIR}/phase7"
 P6V2 = f"{BASE_DATA_DIR}/phase6_v2"
 SRC  = BASE_DATA_DIR
@@ -106,9 +107,15 @@ class HIVEPredictor:
 
     def load(self):
         """Load all static assets. Call once before prediction."""
-        print("[HIVE] Loading Phase 7 model...")
+        print(f"[HIVE] PURVADRISHTI_DATA_DIR resolved to: {BASE_DATA_DIR}")
+        
+        model_path = f"{P7}/model.ubj"
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"[HIVE] CRITICAL: Model file not found at: {model_path}")
+            
+        print(f"[HIVE] Loading Phase 7 model from {model_path}...")
         self.model = xgb.Booster()
-        self.model.load_model(f"{P7}/model.ubj")
+        self.model.load_model(model_path)
 
         print("[HIVE] Loading reference data...")
         self.atm_df     = pd.read_csv(f"{SRC}/atm_reference.csv")
