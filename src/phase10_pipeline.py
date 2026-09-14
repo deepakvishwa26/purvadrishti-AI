@@ -32,10 +32,11 @@ sys.path.insert(0, ROOT)
 import xgboost as xgb
 
 # ── Paths ─────────────────────────────────────────────────────────────
-P7   = "data/output/phase7"
-P6V2 = "data/output/phase6_v2"
-SRC  = "data/output"
-OUT  = "data/output/phase10"
+BASE_DATA_DIR = os.environ.get("PURVADRISHTI_DATA_DIR", "data/output")
+P7   = f"{BASE_DATA_DIR}/phase7"
+P6V2 = f"{BASE_DATA_DIR}/phase6_v2"
+SRC  = BASE_DATA_DIR
+OUT  = f"{BASE_DATA_DIR}/phase10"
 
 P7_FEATURES = [
     "fraud_amount","amount_log","hour","day_of_week","is_weekend","is_night",

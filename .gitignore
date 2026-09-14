@@ -51,3 +51,8 @@ htmlcov/
 .env.*
 *.key
 *.pem
+
+# ── Deployment Artifacts ─────────────────────────────
+!deploy_data/
+!deploy_data/**/*.csv
+!deploy_data/**/*.ubj
