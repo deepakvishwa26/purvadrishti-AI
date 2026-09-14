@@ -49,7 +49,8 @@ app = FastAPI(
 )
 
 # Static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+STATIC_DIR = os.path.join(ROOT, "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Routes
 app.include_router(router)
