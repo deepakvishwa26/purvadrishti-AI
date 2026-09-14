@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PURVADRISHTI — Predictive Intelligence for Cyber-Fraud Cash-Out Response</title>
+  <meta name="description" content="PURVADRISHTI: Predictive Intelligence for Cyber-Fraud Cash-Out Response. Decision-support dashboard for cyber-fraud investigation."/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       PURVADRISHTI — Professional Blue Theme
+       Government / Enterprise Decision-Support Dashboard
+    ═══════════════════════════════════════════════════════ */
+    :root {
+      --primary:      #0B5CAB;
+      --primary-dark: #063B73;
+      --primary-mid:  #2D7BC4;
+      --primary-lt:   #5A9AD5;
+      --secondary:    #DCEEFF;
+      --secondary-lt: #EBF4FF;
+      --bg:           #F5F9FD;
+      --white:        #FFFFFF;
+      --text:         #123B63;
+      --text2:        #5F7183;
+      --text3:        #8A9BB0;
+      --border:       #B8D4EE;
+      --border2:      #D6E6F5;
+      --success:      #1A7A3A;
+      --success-bg:   #E8F5EE;
+      --radius:       10px;
+      --radius-sm:    6px;
+      --shadow:       0 1px 4px rgba(11,92,171,0.07);
+      --shadow2:      0 2px 12px rgba(11,92,171,0.09);
+      /* Priority colors — blue-based */
+      --pri-high:     #0B5CAB;
+      --pri-high-bg:  #DCEEFF;
+      --pri-med:      #4A90D9;
+      --pri-med-bg:   #E8F0FB;
+      --pri-low:      #8AAFCF;
+      --pri-low-bg:   #F0F5FA;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      background: var(--white);
+      border-bottom: 3px solid var(--primary);
+      padding: 0 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 62px;
+      box-shadow: var(--shadow2);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 14px; }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-mark svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .logo-text h1 {
+      font-size: 20px; font-weight: 800; color: var(--primary-dark);
+      letter-spacing: -0.5px; line-height: 1;
+    }
+    .logo-text p { font-size: 10px; color: var(--text2); margin-top: 2px; letter-spacing: 0.3px; }
+    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .hbadge {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 500;
+    }
+    .hbadge-online  { background: var(--success-bg); color: var(--success); border: 1px solid #b6dfc6; }
+    .hbadge-ds      { background: var(--secondary); color: var(--primary); border: 1px solid var(--border); }
+    .status-dot     { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .layout { display: flex; height: calc(100vh - 62px); overflow: hidden; }
+    .sidebar {
+      width: 300px; min-width: 280px;
+      background: var(--white); border-right: 1px solid var(--border);
+      overflow-y: auto; display: flex; flex-direction: column;
+    }
+    .main {
+      flex: 1; overflow-y: auto; background: var(--bg);
+      padding: 20px; display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* ── Sidebar sections ───────────────────────────────────── */
+    .s-section { padding: 16px 18px; border-bottom: 1px solid var(--border2); }
+    .s-title {
+      font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .s-title::before {
+      content: ''; width: 3px; height: 10px;
+      background: var(--primary); border-radius: 2px; display: block;
+    }
+
+    /* ── Complaint selector ─────────────────────────────────── */
+    .select-box {
+      width: 100%; padding: 9px 34px 9px 11px; border-radius: var(--radius-sm);
+      background: var(--white); border: 1.5px solid var(--border);
+      color: var(--text); font-family: inherit; font-size: 13px; cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A9BB0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 11px center;
+      transition: border-color 0.15s;
+    }
+    .select-box:focus { outline: none; border-color: var(--primary); }
+    .btn-primary {
+      width: 100%; padding: 10px 16px; border-radius: var(--radius-sm);
+      background: var(--primary); border: none;
+      color: white; font-family: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; margin-top: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* ── Info rows ──────────────────────────────────────────── */
+    .info-row { display: flex; flex-direction: column; gap: 6px; }
+    .info-item {
+      background: var(--bg); border-radius: var(--radius-sm);
+      border: 1px solid var(--border2); padding: 8px 11px;
+    }
+    .info-lbl {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; color: var(--text3); margin-bottom: 3px;
+    }
+    .info-val { font-size: 13px; font-weight: 600; color: var(--text); }
+    .info-val.large { font-size: 15px; color: var(--primary); font-weight: 700; }
+
+    /* ── Alert banner ───────────────────────────────────────── */
+    .alert-bar {
+      border-radius: var(--radius); padding: 14px 18px;
+      display: flex; align-items: flex-start; gap: 14px;
+      border: 1.5px solid;
+    }
+    .alert-bar.HIGH   { background: var(--pri-high-bg); border-color: var(--border); }
+    .alert-bar.MEDIUM { background: var(--pri-med-bg);  border-color: var(--border2); }
+    .alert-bar.LOW    { background: var(--pri-low-bg);  border-color: var(--border2); }
+    .alert-icon {
+      width: 38px; height: 38px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 14px; font-weight: 800; color: #fff;
+    }
+    .alert-bar.HIGH   .alert-icon { background: var(--pri-high); }
+    .alert-bar.MEDIUM .alert-icon { background: var(--pri-med); }
+    .alert-bar.LOW    .alert-icon { background: var(--pri-low); }
+    .alert-body { flex: 1; }
+    .alert-body .alert-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--text3); margin-bottom: 2px;
+    }
+    .alert-body h3 { font-size: 15px; font-weight: 700; }
+    .alert-bar.HIGH   .alert-body h3 { color: var(--pri-high); }
+    .alert-bar.MEDIUM .alert-body h3 { color: var(--pri-med); }
+    .alert-bar.LOW    .alert-body h3 { color: var(--pri-low); }
+    .alert-body p {
+      font-size: 11px; color: var(--text2); margin-top: 4px; line-height: 1.45;
+    }
+
+    /* ── Cards ──────────────────────────────────────────────── */
+    .card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 7px;
+    }
+    .card-title .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--primary-lt); flex-shrink: 0;
+    }
+
+    /* ── Map ────────────────────────────────────────────────── */
+    #map {
+      width: 100%; height: 420px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); z-index: 1;
+    }
+    .leaflet-container { border-radius: var(--radius-sm); }
+
+    /* ── Zone list (Top-5) ──────────────────────────────────── */
+    .zone-list { display: flex; flex-direction: column; gap: 8px; }
+    .zone-row {
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      padding: 12px 14px; cursor: pointer;
+      display: grid; grid-template-columns: 40px 1fr auto;
+      align-items: center; gap: 12px;
+      background: var(--white);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .zone-row:hover   { border-color: var(--primary-lt); background: var(--secondary-lt); }
+    .zone-row.active  { border-color: var(--primary); background: var(--secondary); }
+    .rank-badge {
+      width: 40px; height: 40px; border-radius: 8px;
+      color: white; font-weight: 800; font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .rank-badge.r1 { background: #0B5CAB; }
+    .rank-badge.r2 { background: #2D7BC4; }
+    .rank-badge.r3 { background: #5A9AD5; }
+    .rank-badge.r4 { background: #7EB5DF; }
+    .rank-badge.r5 { background: #A1CAE8; }
+    .zone-main { min-width: 0; }
+    .zone-main .zone-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.8px;
+      text-transform: uppercase; color: var(--text3); margin-bottom: 2px;
+    }
+    .zone-main h4 {
+      font-size: 12px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .zone-main .zone-meta {
+      font-size: 11px; color: var(--text2); margin-top: 3px;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .zone-right { text-align: right; flex-shrink: 0; }
+    .priority-pill {
+      font-size: 9px; font-weight: 700; border-radius: 4px; padding: 3px 8px;
+      text-transform: uppercase; letter-spacing: 0.4px; display: inline-block;
+    }
+    .priority-pill.HIGH   { background: var(--pri-high-bg); color: var(--pri-high); border: 1px solid var(--border); }
+    .priority-pill.MEDIUM { background: var(--pri-med-bg);  color: var(--pri-med);  border: 1px solid var(--border2); }
+    .priority-pill.LOW    { background: var(--pri-low-bg);  color: var(--pri-low);  border: 1px solid var(--border2); }
+
+    /* ── ATM list ───────────────────────────────────────────── */
+    .atm-list { display: flex; flex-direction: column; gap: 7px; }
+    .atm-row {
+      border: 1px solid var(--border2); border-radius: var(--radius-sm);
+      padding: 9px 12px; background: var(--bg);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .atm-info h5 { font-size: 12px; font-weight: 600; color: var(--text); }
+    .atm-info p  { font-size: 11px; color: var(--text2); margin-top: 1px; }
+    .atm-dist .dist-val { font-size: 13px; font-weight: 700; color: var(--primary-mid); }
+    .atm-dist .dist-lbl { font-size: 10px; color: var(--text3); }
+    .atm-note {
+      font-size: 10px; color: var(--text3); margin-top: 10px; line-height: 1.4;
+      border-top: 1px solid var(--border2); padding-top: 8px;
+    }
+
+    /* ── SHAP ───────────────────────────────────────────────── */
+    .shap-grid  { display: flex; flex-direction: column; gap: 7px; }
+    .shap-row   { display: flex; align-items: center; gap: 10px; }
+    .shap-name  {
+      flex: 1; font-size: 11px; color: var(--text2);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .shap-bar-wrap {
+      width: 120px; height: 5px; background: var(--border2);
+      border-radius: 3px; overflow: hidden; flex-shrink: 0;
+    }
+    .shap-fill  { height: 100%; border-radius: 3px; transition: width 0.4s; }
+    .shap-fill.pos { background: var(--primary); }
+    .shap-fill.neg { background: var(--pri-low); }
+    .shap-val   {
+      font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif;
+      min-width: 54px; text-align: right;
+    }
+    .shap-val.pos { color: var(--primary); }
+    .shap-val.neg { color: var(--text3); }
+    .shap-dir {
+      font-size: 13px; width: 18px; text-align: center; flex-shrink: 0;
+    }
+    .shap-note  {
+      font-size: 10px; color: var(--text3); margin-top: 10px; line-height: 1.4;
+      border-top: 1px solid var(--border2); padding-top: 8px;
+    }
+
+    /* ── Technical Details (collapsible) ────────────────────── */
+    .tech-toggle {
+      width: 100%; background: none; border: none;
+      padding: 0; cursor: pointer; text-align: left;
+      font-family: inherit; display: flex; align-items: center; gap: 6px;
+    }
+    .tech-toggle .s-title { margin-bottom: 0; cursor: pointer; }
+    .tech-chevron {
+      font-size: 10px; color: var(--text3);
+      transition: transform 0.2s;
+    }
+    .tech-chevron.open { transform: rotate(90deg); }
+    .tech-content {
+      display: none; margin-top: 10px;
+    }
+    .tech-content.open { display: block; }
+    .tech-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    }
+    .tech-item {
+      background: var(--bg); border-radius: var(--radius-sm);
+      padding: 7px 10px; border: 1px solid var(--border2);
+    }
+    .tech-label {
+      font-size: 9px; color: var(--text3); text-transform: uppercase;
+      letter-spacing: 0.7px; margin-bottom: 2px;
+    }
+    .tech-val { font-size: 12px; font-weight: 600; color: var(--text); }
+
+    /* ── Disclaimer ─────────────────────────────────────────── */
+    .disclaimer {
+      font-size: 10px; color: var(--text2); line-height: 1.5;
+      background: var(--secondary-lt); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 9px 11px;
+    }
+    .disclaimer b { color: var(--primary-dark); }
+
+    /* ── 2-col grid ─────────────────────────────────────────── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* ── Empty / loading states ─────────────────────────────── */
+    .empty {
+      text-align: center; padding: 52px 20px;
+      color: var(--text3); display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
+    }
+    .empty-icon { font-size: 40px; opacity: 0.45; }
+    .empty h3   { font-size: 15px; color: var(--text2); font-weight: 600; }
+    .empty p    { font-size: 12px; max-width: 300px; line-height: 1.5; }
+
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(245,249,253,0.88);
+      display: flex; align-items: center; justify-content: center; z-index: 1000;
+      flex-direction: column; gap: 14px;
+    }
+    .loading-overlay.hidden { display: none; }
+    .spinner {
+      width: 44px; height: 44px; border: 3px solid var(--border);
+      border-top-color: var(--primary); border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-overlay p { color: var(--text2); font-size: 13px; }
+
+    /* ── Map legend ─────────────────────────────────────────── */
+    .map-legend {
+      position: absolute; bottom: 16px; right: 16px; z-index: 500;
+      background: rgba(255,255,255,0.96); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      font-size: 10px; color: var(--text2); box-shadow: var(--shadow);
+    }
+    .legend-title {
+      font-weight: 700; color: var(--text); margin-bottom: 6px;
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 7px; margin-top: 4px; }
+    .legend-swatch { width: 16px; height: 11px; border-radius: 2px; }
+
+    /* ── Scrollbar ───────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 1100px) {
+      .two-col { grid-template-columns: 1fr; }
+      .sidebar { width: 260px; min-width: 240px; }
+    }
+    @media (max-width: 900px) {
+      .sidebar { width: 240px; min-width: 220px; }
+      #map { height: 340px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="spinner"></div>
+  <p>Running PURVADRISHTI prediction…</p>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+    </div>
+    <div class="logo-text">
+      <h1>PURVADRISHTI</h1>
+      <p>Predictive Intelligence for Cyber-Fraud Cash-Out Response</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="hbadge hbadge-online"><div class="status-dot"></div> System Online</div>
+    <div class="hbadge hbadge-ds">Decision Support</div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <!-- Case selection -->
+    <div class="s-section">
+      <div class="s-title">Case Selection</div>
+      <select class="select-box" id="complaintSelect">
+        <option value="">— Select Complaint ID —</option>
+      </select>
+      <button class="btn-primary" id="predictBtn" onclick="runPrediction()">
+        ▶ Run Prediction
+      </button>
+    </div>
+
+    <!-- Case summary -->
+    <div class="s-section" id="caseSummarySection" style="display:none;">
+      <div class="s-title">Case Summary</div>
+      <div class="info-row">
+        <div class="info-item">
+          <div class="info-lbl">Complaint ID</div>
+          <div class="info-val" id="s-cid"></div>
+        </div>
+        <div class="info-item">
+          <div class="info-lbl">Fraud Type</div>
+          <div class="info-val" id="s-type"></div>
+        </div>
+        <div class="info-item">
+          <div class="info-lbl">Fraud Amount</div>
+          <div class="info-val large" id="s-amount"></div>
+        </div>
+        <div class="info-item">
+          <div class="info-lbl">Incident Time</div>
+          <div class="info-val" id="s-time" style="font-size:12px;"></div>
+        </div>
+        <div class="info-item">
+          <div class="info-lbl">Victim Location</div>
+          <div class="info-val" id="s-state"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical details (collapsed by default) -->
+    <div class="s-section">
+      <button class="tech-toggle" id="techToggle" onclick="toggleTechDetails()">
+        <div class="s-title" style="margin-bottom:0;">Technical Details</div>
+        <span class="tech-chevron" id="techChevron">▶</span>
+      </button>
+      <div class="tech-content" id="techContent">
+        <div class="tech-grid" id="techGrid">
+          <div class="tech-item">
+            <div class="tech-label">Model</div>
+            <div class="tech-val">XGBoost LTR</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-label">Features</div>
+            <div class="tech-val">22</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-label">H3 Resolution</div>
+            <div class="tech-val">8</div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-label">API Status</div>
+            <div class="tech-val" id="tech-api">Online</div>
+          </div>
+          <div class="tech-item" id="techCandidates" style="display:none;">
+            <div class="tech-label">Candidates</div>
+            <div class="tech-val" id="tech-cands">—</div>
+          </div>
+          <div class="tech-item" id="techMargin" style="display:none;">
+            <div class="tech-label">Score Margin</div>
+            <div class="tech-val" id="tech-margin">—</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.35;">
+          Phase 7 XGBoost Learning-to-Rank model (frozen). Objective: rank:ndcg. 22 features.
+        </div>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="s-section">
+      <div class="disclaimer">
+        <b>Decision-support prototype.</b> Predictions identify ranked high-risk H3 zones for human review.
+        They are not guarantees of cash-out location and do not trigger automatic enforcement or account freezing.<br/><br/>
+        <b>Investigator review required.</b> All outputs require human verification before any action.
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- Empty state -->
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">🗺️</div>
+      <h3>Select a case to begin investigation</h3>
+      <p>Choose a complaint and run prediction to identify high-risk cash-out zones for investigator review.</p>
+    </div>
+
+    <!-- Results area -->
+    <div id="resultsArea" style="display:none;">
+
+      <!-- Alert bar -->
+      <div id="alertBar"></div>
+
+      <!-- Map -->
+      <div class="card" style="padding:14px;">
+        <div class="card-title"><span class="dot"></span> Predicted High-Risk Cash-Out Zones</div>
+        <div style="position:relative;">
+          <div id="map"></div>
+          <div class="map-legend" id="mapLegend" style="display:none;">
+            <div class="legend-title">Legend</div>
+            <div class="legend-item"><div class="legend-swatch" style="background:#C62828;border-radius:50%;"></div> Victim Location</div>
+            <div class="legend-item"><div class="legend-swatch" style="background:#0B5CAB;opacity:0.8;"></div> H3 Zone — Rank 1</div>
+            <div class="legend-item"><div class="legend-swatch" style="background:#5A9AD5;opacity:0.6;"></div> H3 Zone — Rank 2-5</div>
+            <div class="legend-item"><div class="legend-swatch" style="background:var(--primary-lt);border:1px solid var(--primary);border-radius:50%;width:10px;height:10px;"></div> ATM Reference</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Predictions + ATMs -->
+      <div class="two-col">
+        <!-- Top-5 zones -->
+        <div class="card">
+          <div class="card-title"><span class="dot"></span> Predicted High-Risk Zones</div>
+          <div class="zone-list" id="zoneList"></div>
+        </div>
+
+        <!-- ATMs -->
+        <div class="card">
+          <div class="card-title" id="atmCardTitle"><span class="dot"></span> Nearby ATM References</div>
+          <div id="atmList"></div>
+          <div class="atm-note">
+            Nearby ATM references are mapped from the predicted H3 zone centroid for investigation support.
+            They are not direct model prediction targets.
+          </div>
+        </div>
+      </div>
+
+      <!-- SHAP -->
+      <div class="card">
+        <div class="card-title"><span class="dot"></span> Why This Zone Ranked Highly</div>
+        <div id="shapSection"></div>
+        <div class="shap-note" id="shapNote" style="display:none;">
+          Feature contributions explain factors influencing the model's ranking.
+          They do not establish criminal activity or certainty.
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  PURVADRISHTI — Frontend Logic (Investigator Dashboard)
+// ═══════════════════════════════════════════════════════
+let map = null, currentData = null;
+const mapLayers = {};
+
+// Blue gradient for H3 zone fills (Rank 1 = darkest)
+const ZONE_COLORS = ['#0B5CAB','#2D7BC4','#5A9AD5','#8BB8E4','#B8D4EE'];
+
+// Priority descriptions — professional investigator language
+const PRIORITY_DESC = {
+  HIGH:   'Prioritized for investigator review — strong risk-signal separation detected.',
+  MEDIUM: 'Moderate risk-signal separation — investigator review recommended.',
+  LOW:    'Weak risk-signal separation — lower confidence zone.'
+};
+
+// ── Load complaint list ────────────────────────────────
+async function loadComplaints() {
+  try {
+    const res = await fetch('/api/complaints');
+    const d = await res.json();
+    const sel = document.getElementById('complaintSelect');
+    d.complaints.forEach(cid => {
+      const o = document.createElement('option'); o.value = cid; o.textContent = cid;
+      sel.appendChild(o);
+    });
+  } catch(e) { console.warn('Failed to load complaints', e); }
+}
+
+// ── Technical details toggle ──────────────────────────
+function toggleTechDetails() {
+  const content = document.getElementById('techContent');
+  const chevron = document.getElementById('techChevron');
+  const isOpen = content.classList.toggle('open');
+  chevron.classList.toggle('open', isOpen);
+}
+
+// ── Map init ──────────────────────────────────────────
+function initMap(lat, lon) {
+  if (map) { map.remove(); map = null; }
+  Object.keys(mapLayers).forEach(k => delete mapLayers[k]);
+  map = L.map('map').setView([lat, lon], 8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(map);
+}
+
+function drawMap(data) {
+  const ci = data.complaint_info;
+  initMap(ci.victim_lat, ci.victim_lon);
+
+  // Victim marker — restrained red
+  const vic = L.divIcon({
+    html: '<div style="width:16px;height:16px;border-radius:50%;background:#C62828;border:2.5px solid #fff;box-shadow:0 1px 6px rgba(198,40,40,0.45);"></div>',
+    iconSize:[16,16], iconAnchor:[8,8], className:''
+  });
+  mapLayers['victim'] = L.marker([ci.victim_lat, ci.victim_lon], {icon:vic})
+    .bindPopup('<b>Victim Location</b><br/>' + ci.victim_state + '<br/>₹ ' + Number(ci.fraud_amount).toLocaleString('en-IN'))
+    .addTo(map);
+
+  // H3 zones — blue gradient
+  data.top_predictions.forEach((p, i) => {
+    const col = ZONE_COLORS[i] || ZONE_COLORS[4];
+    const fillOpacity = [0.30, 0.22, 0.18, 0.14, 0.10][i] || 0.10;
+    const poly = L.polygon(p.boundary.map(c => [c[0],c[1]]), {
+      color: col, weight: i === 0 ? 2.5 : 1.5,
+      fillColor: col, fillOpacity: fillOpacity,
+      dashArray: i === 0 ? null : '4,3'
+    });
+    poly.bindPopup(
+      '<b>Predicted Zone — Rank #' + p.rank + '</b><br/>' +
+      '<span style="font-size:11px;color:#5F7183;">' + p.h3_cell + '</span><br/>' +
+      'Distance: <b>' + p.dist_from_victim_km + ' km</b><br/>' +
+      'ATMs in zone: <b>' + p.atm_count_in_zone + '</b>'
+    );
+    poly.on('click', () => selectZone(p.rank));
+    mapLayers['h3_' + i] = poly.addTo(map);
+
+    // Rank label
+    const lbl = L.divIcon({
+      html: '<div style="background:' + col + ';color:#fff;font-weight:800;font-size:10px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);">' + p.rank + '</div>',
+      iconSize:[20,20], iconAnchor:[10,10], className:''
+    });
+    mapLayers['lbl_' + i] = L.marker([p.centroid_lat, p.centroid_lon], {icon:lbl}).addTo(map);
+  });
+
+  drawATMMarkers(data.top_predictions[0]);
+  document.getElementById('mapLegend').style.display = '';
+}
+
+function drawATMMarkers(pred) {
+  Object.keys(mapLayers).filter(k => k.startsWith('atm_')).forEach(k => {
+    if (map.hasLayer(mapLayers[k])) map.removeLayer(mapLayers[k]);
+    delete mapLayers[k];
+  });
+  if (!pred.nearby_atms) return;
+  const atmIcon = L.divIcon({
+    html: '<div style="width:9px;height:9px;background:' + ZONE_COLORS[2] + ';border:1.5px solid ' + ZONE_COLORS[0] + ';border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>',
+    iconSize:[9,9], iconAnchor:[4,4], className:''
+  });
+  pred.nearby_atms.forEach((a,i) => {
+    mapLayers['atm_' + i] = L.marker([a.lat, a.lon], {icon:atmIcon})
+      .bindPopup('<b>ATM Reference</b><br/>' + a.atm_id + '<br/>' + a.city + ', ' + a.state + '<br/>Distance to zone: ' + a.dist_to_h3_centroid_km + ' km')
+      .addTo(map);
+  });
+}
+
+// ── Prediction ─────────────────────────────────────────
+async function runPrediction() {
+  const cid = document.getElementById('complaintSelect').value;
+  if (!cid) { alert('Please select a complaint ID.'); return; }
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  document.getElementById('predictBtn').disabled = true;
+  try {
+    const res = await fetch('/api/predict', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({complaint_id: cid})
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      showError(err.detail || 'Prediction failed');
+      return;
+    }
+    currentData = await res.json();
+    renderResults(currentData);
+  } catch(e) {
+    showError('Network error: ' + e.message);
+  } finally {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('predictBtn').disabled = false;
+  }
+}
+
+function showError(msg) {
+  alert('⚠ ' + msg);
+}
+
+function renderResults(d) {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsArea').style.display = '';
+  document.getElementById('caseSummarySection').style.display = '';
+
+  // Case summary
+  const ci = d.complaint_info;
+  document.getElementById('s-cid').textContent   = d.complaint_id;
+  document.getElementById('s-type').textContent  = ci.fraud_type.replace(/_/g,' ');
+  document.getElementById('s-state').textContent = ci.victim_state;
+  document.getElementById('s-amount').textContent= '₹ ' + Number(ci.fraud_amount).toLocaleString('en-IN', {maximumFractionDigits:2});
+  document.getElementById('s-time').textContent  = ci.incident_datetime.substring(0,16).replace('T',' ');
+
+  // Technical details (update dynamic values)
+  document.getElementById('tech-cands').textContent = d.n_candidates + ' zones';
+  document.getElementById('techCandidates').style.display = '';
+  document.getElementById('tech-margin').textContent = (d.score_margin * 100).toFixed(1) + '%';
+  document.getElementById('techMargin').style.display = '';
+
+  // Alert bar
+  renderAlertBar(d);
+
+  // Zones
+  renderZones(d);
+
+  // ATMs for rank-1
+  renderATMs(d.top_predictions[0], 1);
+
+  // SHAP for rank-1
+  renderSHAP(d.top_predictions[0].shap, 1);
+
+  // Map
+  drawMap(d);
+}
+
+function renderAlertBar(d) {
+  const p = d.alert_priority;
+  const icons = {HIGH:'!', MEDIUM:'~', LOW:'—'};
+  document.getElementById('alertBar').innerHTML =
+    '<div class="alert-bar ' + p + '" style="margin-bottom:12px;">' +
+      '<div class="alert-icon">' + icons[p] + '</div>' +
+      '<div class="alert-body">' +
+        '<div class="alert-label">Investigation Priority</div>' +
+        '<h3>' + p + ' PRIORITY</h3>' +
+        '<p>' + PRIORITY_DESC[p] + ' Investigator review required.</p>' +
+      '</div>' +
+    '</div>';
+}
+
+function renderZones(d) {
+  const list = document.getElementById('zoneList');
+  list.innerHTML = '';
+  d.top_predictions.forEach((p, i) => {
+    // Determine per-zone priority based on rank
+    const zonePri = i === 0 ? 'HIGH' : (i < 3 ? 'MEDIUM' : 'LOW');
+    const div = document.createElement('div');
+    div.className = 'zone-row' + (p.rank === 1 ? ' active' : '');
+    div.setAttribute('data-rank', p.rank);
+    div.onclick = () => selectZone(p.rank);
+    div.innerHTML =
+      '<div class="rank-badge r' + p.rank + '">' + p.rank + '</div>' +
+      '<div class="zone-main">' +
+        '<div class="zone-label">Rank ' + p.rank + '</div>' +
+        '<h4>' + p.h3_cell + '</h4>' +
+        '<div class="zone-meta">' +
+          '<span>' + p.dist_from_victim_km + ' km</span>' +
+          '<span>·</span>' +
+          '<span>' + p.atm_count_in_zone + ' ATMs</span>' +
+          (p.in_victim_state ? '<span>· Same state</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="zone-right">' +
+        '<span class="priority-pill ' + zonePri + '">' + zonePri + '</span>' +
+      '</div>';
+    list.appendChild(div);
+  });
+}
+
+function selectZone(rank) {
+  document.querySelectorAll('.zone-row').forEach(r => {
+    r.classList.toggle('active', parseInt(r.getAttribute('data-rank')) === rank);
+  });
+  const pred = currentData.top_predictions.find(p => p.rank === rank);
+  renderATMs(pred, rank);
+  renderSHAP(pred.shap, rank);
+  drawATMMarkers(pred);
+  if (map) map.setView([pred.centroid_lat, pred.centroid_lon], 10);
+}
+
+function renderATMs(pred, rank) {
+  document.getElementById('atmCardTitle').innerHTML =
+    '<span class="dot"></span> Nearby ATM References — Zone #' + rank;
+  const el = document.getElementById('atmList');
+  if (!pred.nearby_atms || pred.nearby_atms.length === 0) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3);">No ATMs found near this zone in reference data.</p>';
+    return;
+  }
+  el.innerHTML = pred.nearby_atms.map(a =>
+    '<div class="atm-row">' +
+      '<div class="atm-info">' +
+        '<h5>' + a.atm_id + '</h5>' +
+        '<p>' + a.city + ', ' + a.state + '</p>' +
+      '</div>' +
+      '<div class="atm-dist" style="text-align:right;">' +
+        '<div class="dist-val">' + a.dist_to_h3_centroid_km + ' km</div>' +
+        '<div class="dist-lbl">from zone centroid</div>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function renderSHAP(shap, rank) {
+  const el = document.getElementById('shapSection');
+  const note = document.getElementById('shapNote');
+  if (!shap || !shap.top_factors || shap.top_factors.length === 0) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3);">Explainability data unavailable for this zone.</p>';
+    note.style.display = 'none'; return;
+  }
+  const maxAbs = Math.max(...shap.top_factors.map(f => Math.abs(f.shap_value)), 0.0001);
+  el.innerHTML =
+    '<div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Zone #' + rank + ' — top contributing factors:</div>' +
+    '<div class="shap-grid">' +
+      shap.top_factors.map(f => {
+        const pct = Math.min(Math.abs(f.shap_value) / maxAbs * 100, 100);
+        const cls = f.shap_value >= 0 ? 'pos' : 'neg';
+        const dir = f.shap_value >= 0 ? '+' : '−';
+        return '<div class="shap-row">' +
+          '<div class="shap-dir ' + cls + '">' + dir + '</div>' +
+          '<div class="shap-name" title="' + f.display_name + ': ' + f.feature_value + '">' + f.display_name + '</div>' +
+          '<div class="shap-bar-wrap"><div class="shap-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+          '<div class="shap-val ' + cls + '">' + (f.shap_value >= 0 ? '+' : '') + f.shap_value.toFixed(3) + '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  note.style.display = '';
+}
+
+// ── Init ───────────────────────────────────────────────
+loadComplaints();
+document.getElementById('complaintSelect').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runPrediction();
+});
+</script>
+</body>
+</html>

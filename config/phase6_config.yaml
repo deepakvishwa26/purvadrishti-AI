@@ -1,0 +1,56 @@
+# =============================================================================
+# HIVE-Predict Phase 6 Configuration — Candidate-H3 Ranking Dataset
+# =============================================================================
+# Candidate generation for XGBoost Learning-to-Rank training.
+# Seed = 42 for full reproducibility.
+# =============================================================================
+
+general:
+  seed: 42
+  h3_resolution: 8
+  output_dir: data/output/phase6
+  phase: "6.0.0"
+
+# ---------------------------------------------------------------------------
+# Candidate generation strategy (per cashout complaint)
+# ---------------------------------------------------------------------------
+# Ring neighbors of VICTIM H3 — hard negatives (actual H3 is ~0% within ring-2)
+# ATM-proximity — plausible locations (withdrawals happen at ATMs)
+# Historical hotspot — medium difficulty (cells with past activity)
+# Same-state random ATM H3 — moderate difficulty
+# Global random ATM H3 — easy negatives / exploration
+# Actual H3 always added last to guarantee positive label coverage.
+# ---------------------------------------------------------------------------
+candidate_generation:
+  # Ring neighbors around victim H3 (rings 1..victim_ring_max inclusive)
+  # ring-1=6 cells, ring-2=12 more cells, ring-3=18 more cells
+  victim_ring_max: 3        # 36 ring-neighbor cells (all hard negatives)
+
+  # ATM H3 cells ranked by proximity to victim (use h3 centroids)
+  atm_nearby_count: 10      # 10 nearest ATM H3 cells by centroid distance
+
+  # Top global hotspot H3 cells from historical seed counter
+  hotspot_global_pool: 200  # pre-select top-200 hotspot cells
+  hotspot_sample_count: 6   # sample 6 per complaint from pool (for variety)
+
+  # Random ATM H3 from victim's state
+  atm_state_count: 5        # 5 random state-ATM H3 cells
+
+  # Fully random ATM H3 (exploration / easy negatives)
+  atm_random_count: 4       # 4 random ATM H3 from full pool
+
+# ---------------------------------------------------------------------------
+# Train / Validation / Test split (temporal, complaint-level)
+# ---------------------------------------------------------------------------
+split:
+  method: temporal          # sort by complaint_registered_at
+  train_fraction: 0.70
+  validation_fraction: 0.15
+  test_fraction: 0.15
+
+# ---------------------------------------------------------------------------
+# Source data
+# ---------------------------------------------------------------------------
+source:
+  output_dir: data/output
+  seed_config: config/generation_config.yaml   # for seed event regeneration

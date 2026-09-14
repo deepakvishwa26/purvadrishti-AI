@@ -1,0 +1,56 @@
+{
+  "generator_version": "2.0.0",
+  "schema_version": "2.0.0",
+  "generation_timestamp": "2026-09-04T13:36:11.336353Z",
+  "random_seed": 42,
+  "num_cases": 10000,
+  "h3_resolution": 8,
+  "output_format": "csv",
+  "generation_time_seconds": 549.4,
+  "record_counts": {
+    "complaints": 10000,
+    "accounts": 45244,
+    "transactions": 41032,
+    "mule_chains": 31032,
+    "suspects": 10000,
+    "withdrawals": 12003,
+    "atm_reference": 2000,
+    "feature_snapshots": 10000,
+    "cashout_labels": 13928
+  },
+  "v2_changes": [
+    "Prediction-time temporal semantics enforced",
+    "Mule account pool with reuse across complaints",
+    "Rolling-window DBSCAN clustering (no temporal leakage)",
+    "Observable-at-cutoff mule chain features",
+    "Stochastic profile-outcome decoupling",
+    "Historical seed events for hotspot density",
+    "Weighted ATM selection (victim/drift/random)",
+    "Amount velocity minimum time floor"
+  ],
+  "mule_network_stats": {
+    "total_mule_accounts": 25244,
+    "accounts_multi_complaint": 6148,
+    "max_reuse": 5
+  },
+  "configuration_file": "config/generation_config.yaml",
+  "reference_datasets": [
+    "SYNTHETIC_ATM_REFERENCE"
+  ],
+  "synthetic_assumptions": [
+    "Fraud type distribution is a simulation assumption",
+    "Fraud amount lognormal parameters are simulation assumptions",
+    "Behavioral profile probabilities are simulation assumptions",
+    "State-level fraud weights are approximate simulation assumptions",
+    "ATM locations are synthetic and do NOT represent real ATM locations",
+    "Hourly fraud distribution is a simulation assumption",
+    "Mule chain friction rates are simulation assumptions",
+    "Mule account reuse probabilities are simulation assumptions",
+    "Historical seed event distribution is a simulation assumption"
+  ],
+  "data_sources": [
+    "All data is synthetically generated",
+    "No real PII or individual records are included",
+    "Geographic bounds are approximate Indian state boundaries"
+  ]
+}

@@ -1,0 +1,53 @@
+# ═══════════════════════════════════════════════════════
+# PURVADRISHTI — .gitignore
+# ═══════════════════════════════════════════════════════
+
+# ── Data (large CSV/parquet/model files) ──────────────
+data/
+*.csv
+*.parquet
+*.ubj
+*.pkl
+*.joblib
+
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ─────────────────────────────
+venv/
+.venv/
+env/
+.env
+
+# ── IDE ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS files ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Testing ──────────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage
+
+# ── Logs ─────────────────────────────────────────────
+*.log
+
+# ── Secrets / credentials ────────────────────────────
+.env
+.env.*
+*.key
+*.pem

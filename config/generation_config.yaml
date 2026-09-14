@@ -1,0 +1,403 @@
+# =============================================================================
+# HIVE-Predict Synthetic Data Generation Configuration — V2
+# =============================================================================
+# This file controls all configurable parameters for the synthetic generator.
+# All probability distributions are SYNTHETIC SIMULATION ASSUMPTIONS
+# unless explicitly noted as derived from official public statistics.
+# =============================================================================
+
+# --- General Settings ---
+general:
+  num_cases: 10000
+  seed: 42
+  output_format: csv          # csv or parquet
+  output_dir: data/output
+  h3_resolution_primary: 8
+  h3_resolution_dense: 9
+  prediction_window_hours: 4  # 0-4 hour golden-hour window
+  generator_version: "2.0.0"
+  schema_version: "2.0.0"
+
+# --- Fraud Type Distribution ---
+# SYNTHETIC ASSUMPTION: These are simulation parameters, not official statistics.
+fraud_types:
+  DIGITAL_PAYMENT_FRAUD: 0.35
+  INVESTMENT_FRAUD: 0.20
+  DIGITAL_ARREST: 0.15
+  PHISHING: 0.20
+  OTHER: 0.10
+
+# --- Fraud Amount Distribution (INR) ---
+# Conditioned on fraud type. Uses lognormal(mu, sigma) parameters.
+# SYNTHETIC ASSUMPTION: Right-skewed distributions calibrated for plausibility.
+fraud_amount:
+  DIGITAL_PAYMENT_FRAUD:
+    distribution: lognormal
+    mu: 10.0      # ~22,000 INR median
+    sigma: 1.2
+    min: 500
+    max: 5000000
+  INVESTMENT_FRAUD:
+    distribution: lognormal
+    mu: 11.5      # ~100,000 INR median
+    sigma: 1.5
+    min: 5000
+    max: 50000000
+  DIGITAL_ARREST:
+    distribution: lognormal
+    mu: 12.0      # ~160,000 INR median
+    sigma: 1.0
+    min: 10000
+    max: 20000000
+  PHISHING:
+    distribution: lognormal
+    mu: 9.5       # ~13,000 INR median
+    sigma: 1.0
+    min: 200
+    max: 2000000
+  OTHER:
+    distribution: lognormal
+    mu: 10.5      # ~36,000 INR median
+    sigma: 1.3
+    min: 500
+    max: 10000000
+
+# --- Behavioral Profile Distribution ---
+# SYNTHETIC ASSUMPTION: Probabilities are simulation parameters.
+# V2: cashout_probability decouples profile from deterministic outcome.
+behavioral_profiles:
+  FAST_CASHOUT:
+    probability: 0.30
+    cashout_probability: 0.95   # 5% chance of no cashout
+    mule_chain_depth:
+      min: 1
+      max: 2
+    hop_delay_seconds:
+      min: 30
+      max: 180
+    cashout_delay_seconds:
+      min: 300       # 5 min
+      max: 3600      # 1 hour
+    num_withdrawals:
+      min: 1
+      max: 1
+
+  DEEP_MULE_CHAIN:
+    probability: 0.15
+    cashout_probability: 0.90   # 10% chance of no cashout
+    mule_chain_depth:
+      min: 4
+      max: 8
+    hop_delay_seconds:
+      min: 60
+      max: 600
+    cashout_delay_seconds:
+      min: 1800      # 30 min
+      max: 10800     # 3 hours
+    num_withdrawals:
+      min: 1
+      max: 2
+
+  SLOW_CASHOUT:
+    probability: 0.15
+    cashout_probability: 0.92   # 8% chance of no cashout
+    mule_chain_depth:
+      min: 2
+      max: 4
+    hop_delay_seconds:
+      min: 300
+      max: 1800
+    cashout_delay_seconds:
+      min: 7200      # 2 hours
+      max: 14400     # 4 hours
+    num_withdrawals:
+      min: 1
+      max: 1
+
+  NO_CASHOUT:
+    probability: 0.15
+    cashout_probability: 0.08   # 8% chance of SURPRISE cashout
+    mule_chain_depth:
+      min: 1
+      max: 5
+    hop_delay_seconds:
+      min: 60
+      max: 600
+    cashout_delay_seconds:
+      min: 900       # 15 min (used if surprise cashout triggers)
+      max: 7200      # 2 hours
+    num_withdrawals:
+      min: 0
+      max: 0
+
+  MULTIPLE_CASHOUT:
+    probability: 0.15
+    cashout_probability: 0.93   # 7% chance of no cashout
+    mule_chain_depth:
+      min: 2
+      max: 5
+    hop_delay_seconds:
+      min: 60
+      max: 300
+    cashout_delay_seconds:
+      min: 900       # 15 min
+      max: 7200      # 2 hours
+    num_withdrawals:
+      min: 2
+      max: 4
+
+  COORDINATED_CASE:
+    probability: 0.10
+    cashout_probability: 0.94   # 6% chance of no cashout
+    mule_chain_depth:
+      min: 2
+      max: 4
+    hop_delay_seconds:
+      min: 60
+      max: 300
+    cashout_delay_seconds:
+      min: 600       # 10 min
+      max: 5400      # 1.5 hours
+    num_withdrawals:
+      min: 1
+      max: 2
+    coordination_group_size:
+      min: 2
+      max: 5
+
+# --- Temporal Parameters ---
+temporal:
+  # Date range for generated complaints
+  start_date: "2024-01-01"
+  end_date: "2024-12-31"
+  # Complaint registration delay after incident (seconds)
+  registration_delay:
+    min: 60        # 1 min
+    max: 7200      # 2 hours
+  # Time-of-day distribution weights (hour buckets)
+  # SYNTHETIC ASSUMPTION: Fraud tends to peak evening/night
+  hourly_weights:
+    0: 0.02
+    1: 0.01
+    2: 0.01
+    3: 0.01
+    4: 0.01
+    5: 0.01
+    6: 0.02
+    7: 0.03
+    8: 0.04
+    9: 0.05
+    10: 0.06
+    11: 0.06
+    12: 0.06
+    13: 0.06
+    14: 0.06
+    15: 0.06
+    16: 0.06
+    17: 0.06
+    18: 0.06
+    19: 0.06
+    20: 0.05
+    21: 0.05
+    22: 0.04
+    23: 0.03
+
+# --- Geographic Parameters ---
+geography:
+  # Indian states with relative fraud reporting weights
+  states:
+    Maharashtra:
+      weight: 0.15
+      lat_range: [15.6, 22.0]
+      lon_range: [72.6, 80.9]
+      pincode_prefix: ["40", "41", "42", "43", "44"]
+    Uttar_Pradesh:
+      weight: 0.12
+      lat_range: [23.5, 30.4]
+      lon_range: [77.0, 84.6]
+      pincode_prefix: ["20", "21", "22", "23", "24", "25", "26", "27", "28"]
+    Karnataka:
+      weight: 0.10
+      lat_range: [11.6, 18.5]
+      lon_range: [74.0, 78.6]
+      pincode_prefix: ["56", "57", "58", "59"]
+    Telangana:
+      weight: 0.08
+      lat_range: [15.8, 19.9]
+      lon_range: [77.2, 81.3]
+      pincode_prefix: ["50", "51", "52"]
+    Rajasthan:
+      weight: 0.07
+      lat_range: [23.0, 30.2]
+      lon_range: [69.5, 78.3]
+      pincode_prefix: ["30", "31", "32", "33", "34"]
+    Tamil_Nadu:
+      weight: 0.07
+      lat_range: [8.1, 13.6]
+      lon_range: [76.2, 80.3]
+      pincode_prefix: ["60", "61", "62", "63", "64"]
+    Gujarat:
+      weight: 0.07
+      lat_range: [20.1, 24.7]
+      lon_range: [68.2, 74.5]
+      pincode_prefix: ["36", "37", "38", "39"]
+    Delhi:
+      weight: 0.08
+      lat_range: [28.4, 28.9]
+      lon_range: [76.8, 77.4]
+      pincode_prefix: ["11"]
+    West_Bengal:
+      weight: 0.06
+      lat_range: [21.5, 27.2]
+      lon_range: [86.0, 89.9]
+      pincode_prefix: ["70", "71", "72", "73", "74"]
+    Madhya_Pradesh:
+      weight: 0.05
+      lat_range: [21.1, 26.9]
+      lon_range: [74.0, 82.8]
+      pincode_prefix: ["45", "46", "47", "48", "49"]
+    Bihar:
+      weight: 0.04
+      lat_range: [24.3, 27.5]
+      lon_range: [83.3, 88.2]
+      pincode_prefix: ["80", "81", "82", "83", "84", "85"]
+    Haryana:
+      weight: 0.04
+      lat_range: [27.6, 30.9]
+      lon_range: [74.5, 77.6]
+      pincode_prefix: ["12", "13"]
+    Kerala:
+      weight: 0.03
+      lat_range: [8.2, 12.8]
+      lon_range: [74.8, 77.4]
+      pincode_prefix: ["67", "68", "69"]
+    Punjab:
+      weight: 0.02
+      lat_range: [29.5, 32.5]
+      lon_range: [73.9, 76.9]
+      pincode_prefix: ["14", "15", "16"]
+    Odisha:
+      weight: 0.02
+      lat_range: [17.8, 22.6]
+      lon_range: [81.4, 87.5]
+      pincode_prefix: ["75", "76", "77"]
+
+  # Number of synthetic ATM locations to generate
+  num_atms: 2000
+  # ATM clustering: fraction of ATMs in urban clusters
+  urban_atm_fraction: 0.7
+  # Urban cluster centers (major city approximations)
+  urban_centers:
+    - name: Mumbai
+      lat: 19.076
+      lon: 72.878
+      radius_km: 30
+    - name: Delhi
+      lat: 28.614
+      lon: 77.209
+      radius_km: 25
+    - name: Bangalore
+      lat: 12.972
+      lon: 77.594
+      radius_km: 20
+    - name: Hyderabad
+      lat: 17.385
+      lon: 78.487
+      radius_km: 20
+    - name: Chennai
+      lat: 13.083
+      lon: 80.270
+      radius_km: 18
+    - name: Kolkata
+      lat: 22.573
+      lon: 88.364
+      radius_km: 18
+    - name: Pune
+      lat: 18.520
+      lon: 73.857
+      radius_km: 15
+    - name: Ahmedabad
+      lat: 23.023
+      lon: 72.571
+      radius_km: 15
+    - name: Jaipur
+      lat: 26.912
+      lon: 75.787
+      radius_km: 12
+    - name: Lucknow
+      lat: 26.847
+      lon: 80.947
+      radius_km: 12
+
+# --- Financial Parameters ---
+financial:
+  # Friction per mule hop (percentage of amount lost/retained)
+  mule_hop_friction:
+    min: 0.02    # 2% minimum loss per hop
+    max: 0.10    # 10% maximum loss per hop
+  # Withdrawal amount as fraction of available funds at cashout account
+  withdrawal_fraction:
+    min: 0.50    # withdraw at least 50%
+    max: 0.95    # withdraw at most 95%
+  # Per-ATM withdrawal limit (INR)
+  atm_withdrawal_limit: 50000
+  # Currency
+  currency: INR
+
+# --- Bank Reference ---
+banks:
+  - bank_id: BANK001
+    name: "Synthetic National Bank"
+  - bank_id: BANK002
+    name: "Synthetic State Bank"
+  - bank_id: BANK003
+    name: "Synthetic Union Bank"
+  - bank_id: BANK004
+    name: "Synthetic Payment Bank"
+  - bank_id: BANK005
+    name: "Synthetic Cooperative Bank"
+  - bank_id: BANK006
+    name: "Synthetic Private Bank"
+  - bank_id: BANK007
+    name: "Synthetic Rural Bank"
+  - bank_id: BANK008
+    name: "Synthetic Digital Bank"
+
+# --- Clustering Parameters (V2: rolling window) ---
+clustering:
+  method: "rolling_window"     # "rolling_window" prevents temporal leakage
+  window_days: 30              # Only use complaints from the last 30 days
+  dbscan_eps_km: 10.0          # spatial epsilon in km
+  dbscan_min_samples: 3
+  temporal_window_hours: 24
+  spatial_weight: 0.6
+  temporal_weight: 0.4
+
+# --- Feature Engineering ---
+features:
+  # Historical hotspot density parameters
+  hotspot_bandwidth_km: 5.0
+  hotspot_spatial_rings: 6     # V2: increased from 3 to 6 for better coverage
+  # ATM density radius (km)
+  atm_density_radius_km: 2.0
+  # Amount velocity minimum time denominator (seconds)
+  amount_velocity_min_time_seconds: 60
+
+# --- V2: Mule Account Pool ---
+mule_pool:
+  pool_size: 5000              # Pre-created mule accounts
+  reuse_probability: 0.35      # 35% chance of reusing existing mule
+  max_reuse_per_account: 8     # Max complaints per mule account
+
+# --- V2: Historical Seed Events ---
+historical_seed:
+  num_seed_withdrawals: 50000  # Synthetic historical withdrawals before data window
+  seed_window_days: 180        # Historical events go back 180 days before start_date
+  urban_weight: 0.75           # Fraction of seed events near urban centers
+
+# --- V2: ATM Selection Diversity ---
+atm_selection:
+  victim_proximity_weight: 0.40   # 40% weight for victim-nearest
+  mule_drift_weight: 0.45         # 45% weight for mule-chain-drifted location
+  random_selection_weight: 0.15   # 15% fully random ATM
+  mule_chain_drift_km: 50         # Geographic drift per mule hop (max)

@@ -1,0 +1,59 @@
+# =============================================================================
+# HIVE-Predict Phase 6 v2 Config — Recall-Improved, Size-Controlled
+# =============================================================================
+# Audit-informed changes from v1:
+#
+#  SOURCE                 | V1        | V2         | RATIONALE
+#  -----------------------|-----------|------------|---------------------------
+#  ring_neighbors (1-3)   | 36 cells  | 36 cells   | Keep: hard negatives
+#  nearest_atm            | 10 cells  | 25 cells   | +15: primary recall driver
+#  same_state_atm         | 5 random  | all (≤100) | Fixes 150-500km recall
+#                         |           | dist-sorted| (+30pp in pre-flight)
+#  neighboring_state_atm  | none      | 6/neighbor | New: fixes cross-state
+#  global_random          | 4 cells   | 20 cells   | +16: 500+km exploration
+#  hotspot_pool           | 6 cells   | 0 (REMOVED)| Was 0.00% recall contrib
+#
+# Expected candidate count: avg ~170, max ~230 (was avg 60, max 65 in v1)
+# Expected natural recall:  ~78-82% H3-level (was 69.75% in v1)
+# Residual (500+km):        ~5-8% of actuals — architectural limit
+#   Fix requires: mule-account state geography (Phase 7 scope)
+# =============================================================================
+
+general:
+  seed: 42
+  h3_resolution: 8
+  output_dir: data/output/phase6_v2
+  phase: "6.2.0"
+
+candidate_generation:
+  # Ring neighbors of victim H3 (hard negatives, only 0.59% recall)
+  victim_ring_max: 3
+
+  # Nearest ATM H3 cells by centroid distance (primary recall source: 68.82%)
+  atm_nearby_count: 25
+
+  # ALL ATM H3 cells in victim's state, closest N first
+  # max_state_atm_count caps large states (UP/Maharashtra ~200 cells)
+  # to prevent runaway candidate counts
+  use_all_victim_state_atms: true
+  max_state_atm_count: 100     # take closest 100 in large states; all in small states
+
+  # Neighboring-state ATMs (fixes cross-state: Delhi 14.8%->improved)
+  # Uses STATE_NEIGHBORS adjacency in candidate_generator.py
+  neighboring_state_atm_count: 6   # 6 random ATMs per neighboring state
+
+  # Global random ATM H3 cells (exploration + 500+km partial coverage)
+  atm_random_count: 20
+
+  # Hotspot pool DISABLED (0.00% recall — seed events ≠ ATM cells)
+  hotspot_sample_count: 0
+
+source:
+  output_dir: data/output
+  seed_config: config/generation_config.yaml
+
+split:
+  method: temporal
+  train_fraction: 0.70
+  validation_fraction: 0.15
+  test_fraction: 0.15
